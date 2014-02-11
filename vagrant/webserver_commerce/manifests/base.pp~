@@ -1,0 +1,399 @@
+class base {
+
+  group { "puppet":
+    ensure => "present",
+  }
+
+  exec { "aptitude_update":
+    command => "aptitude update",
+    path    => '/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/sbin:/bin:/usr/games',
+  }
+
+  package { "vim":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "tree":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "htop":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "nfs-kernel-server":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "memcached":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+}
+
+class memcached {
+  service { "memcached":
+    ensure => running,
+    require => [ File["/etc/init.d/php-fastcgi"], File["/etc/php5/cgi/php.ini"], File["/etc/php5/cgi/conf.d/apc.ini"], Package["php5-cgi"], Package["php5-mysql"], Exec["aptitude_update"]],
+  }
+
+}
+
+class drush {
+
+  package { "git-core":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  exec {'git-drush':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    cwd     => '/opt',
+    command => "git clone --branch 7.x-5.x http://git.drupal.org/project/drush.git",
+    require => [ Exec['install-console-table'], Package['git-core']],
+    onlyif  => "/usr/bin/test ! -f /opt/drush/drush",
+  }
+
+  exec{'update-channels-pear':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    command => 'pear update-channels',
+    require => Package["php-pear"],
+    onlyif  => "/usr/bin/test ! -f /opt/drush/drush",
+  }
+
+  exec{'update-pear':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    command => 'pear upgrade',
+    require => [ Package["php-pear"], Exec['update-channels-pear']],
+    onlyif  => "/usr/bin/test ! -f /opt/drush/drush",
+  }
+
+  exec{'install-console-table':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    command => 'pear install Console_Table',
+    require => [ Exec['update-pear'], Exec['update-channels-pear']],
+    onlyif  => "/usr/bin/test ! -f /opt/drush/drush",
+  }
+
+  file { "/home/vagrant/.bashrc":
+    mode => 644,
+    owner => vagrant,
+    group => vagrant,
+    source => "/vagrant/configurations/home/vagrant/.bashrc",
+  }
+
+  file { "/root/.bashrc":
+    mode => 644,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/home/vagrant/.bashrc",
+  }
+  
+}
+
+class mysql {
+  
+  package { "phpmyadmin":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "mysql-server":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  service { "mysql":
+    ensure => running,
+    require => Package["mysql-server"],
+  }
+
+  file { "/etc/mysql/my.cnf":
+    mode    => 644,
+    owner   => root,
+    group   => root,
+    source  => "/vagrant/configurations/etc/mysql/my.cnf",
+    require => Package["mysql-server"],
+  }
+  
+}
+
+class nginx {
+
+  package { "apache2":
+    ensure => absent,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "nginx":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  service { "nginx":
+    ensure => running,
+    require => [ File["/etc/nginx/sites-enabled/default"], File["/etc/nginx/sites-available/default"], Service["php-fastcgi"] ],
+  }
+
+  file { "/etc/nginx/conf.d/proxy.conf":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/nginx/conf.d/proxy.conf",
+    require => Package["nginx"],
+  }
+
+  file { "/etc/nginx/sites-enabled/default":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/nginx/sites-available/default",
+    require => Package["nginx"],
+  }
+
+  file { "/etc/nginx/sites-available/default":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/nginx/sites-available/default",
+    require => Package["nginx"],
+  }
+
+}
+
+class phpcgi {
+  
+  package { "php5-cgi":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  service { "php-fastcgi":
+    ensure => running,
+    require => [ File["/etc/init.d/php-fastcgi"], File["/etc/php5/cgi/php.ini"], File["/etc/php5/cgi/conf.d/apc.ini"], Package["php5-cgi"], Package["php5-mysql"] ],
+  }
+
+  file { "/etc/init.d/php-fastcgi":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/init.d/php-fastcgi",
+    require => Package["php5-cgi"],
+  }
+
+  file { "/etc/php5/cgi/php.ini":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/php5/cgi/php.ini",
+    require => Package["php5-cgi"],
+  }
+
+  file { "/etc/php5/cgi/conf.d/apc.ini":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/php5/cgi/conf.d/apc.ini",
+    require => Package["php5-cgi"],
+  }
+  
+}
+
+class phpenv {
+
+  package { "php5":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-dev":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-cli":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-curl":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "libmysqlclient18":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  } 
+
+  package { "mysql-common":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  } 
+
+  package { "php5-common":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-mysql":
+    ensure => present,
+    require => [Package["libmysqlclient18"], Package["mysql-common"], Package["php5-common"], Exec["aptitude_update"]]
+  }
+
+  package { "php-apc":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-gd":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "imagemagick":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-imagick":
+    ensure => present,
+    require => [ Package['imagemagick'], Exec["aptitude_update"]],
+  }
+
+  package { "php5-mcrypt":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-memcache":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-memcached":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-suhosin":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php-pear":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "curl":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-sqlite":
+    ensure => present,
+    require => Exec["aptitude_update"],
+  }
+
+  package { "php5-fpm": 
+    ensure => absent,
+    require => Exec["aptitude_update"],
+  }
+
+  file { "/etc/php5/conf.d/apc.ini":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/php5/conf.d/apc.ini",
+    require => Package["php5"],
+  }
+
+  file { "/etc/php5/cli/php.ini":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/php5/cli/php.ini",
+    require => Package["php5-cli"],
+  }
+
+  file { "/etc/php5/cli/conf.d/apc.ini":
+    mode => 755,
+    owner => root,
+    group => root,
+    source => "/vagrant/configurations/etc/php5/cli/conf.d/apc.ini",
+    require => Package["php5-cli"],
+  }
+  
+}
+
+
+
+class site_braspag {
+  
+  exec{'install-db-site-create-database-braspag':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    cwd     => '/vagrant/configurations/data/',
+    command => 'mysql -u root -e "CREATE DATABASE braspag;"',
+    onlyif  => ["/usr/bin/test ! $(! /usr/bin/mysql -u root --database braspag -e 'SHOW TABLES')"],
+  }
+
+  exec{'install-db-site-mysql-braspag':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    cwd     => '/vagrant/configurations/data/',
+    command => 'mysql -u root --database braspag < db-braspag.sql',
+    require => Exec['install-db-site-create-database-braspag'],
+    onlyif  => "/usr/bin/test ! $(! /usr/bin/mysql -u root --database braspag -e 'SELECT * FROM sessions;')",
+  }
+
+  exec{ 'set-permissions-braspag':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    cwd     => '/var/www/braspag/',
+    command => 'chmod -R 777 commerce_kickstart',
+    onlyif  => "/usr/bin/test -f /var/www/braspag",
+  }
+
+  exec{'cp-settings-loja':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    cwd     => '/var/www/espm/new/sites/',
+    require => Exec['mount-files-loja'],
+    command => 'cp -Rf /vagrant/configurations/site/espm_loja/loja/settings.php loja/',
+  }
+
+  exec{'cp-settings-loja-db':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    cwd     => '/var/www/espm/new/sites/',
+    require => Exec['mount-files-portal'],
+    command => 'cp -Rf /vagrant/configurations/site/espm_loja/loja-db/settings.php loja-db/',
+  }
+
+  exec{'mount-files-loja':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
+    cwd     => '/var/www/espm/new/sites/loja-db/',
+    command => 'mount -t nfs 10.0.16.80:/home/espm/files/loja/ files/',
+    onlyif  => "/usr/bin/test -e /var/www/espm/new/sites/loja-db/files",
+  }
+
+  file { '/var/www/espm/portal/loja':
+    ensure => 'link',
+    target => '/var/www/espm/new',
+    force => true,     
+  }
+
+}
+
+
+
+include base
+include memcached
+include drush
+include mysql
+include nginx
+include phpcgi
+include phpenv
+include site_braspag
