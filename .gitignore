@@ -3,3 +3,4 @@
 *.swp
 
 www/*
+vagrant/webserver_commerce/.vagrant
