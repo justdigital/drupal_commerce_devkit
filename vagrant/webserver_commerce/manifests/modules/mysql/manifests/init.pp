@@ -19,7 +19,7 @@ class mysql {
     mode    => 644,
     owner   => root,
     group   => root,
-    source  => "/vagrant/configurations/etc/mysql/my.cnf",
+    source  => "/vagrant/manifests/modules/mysql/configurations/my.cnf",
     require => Package["mysql-server"],
   }
   

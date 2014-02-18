@@ -24,14 +24,14 @@ class drush {
     mode => 644,
     owner => vagrant,
     group => vagrant,
-    source => "/vagrant/configurations/home/vagrant/.bashrc",
+    source => "/vagrant/manifests/modules/drush/configurations/.bashrc",
   }
 
   file { "/root/.bashrc":
     mode => 644,
     owner => root,
     group => root,
-    source => "/vagrant/configurations/home/vagrant/.bashrc",
+    source => "/vagrant/manifests/modules/drush/configurations/.bashrc",
   }
   
 }

@@ -1,44 +1,7 @@
-class base {
-
-  group { "puppet":
-    ensure => "present",
-  }
-
-  exec{ "networking_restart":
-    command => '/etc/init.d/networking restart'
-  }
-
-  exec { "aptitude_update":
-    command => "aptitude update",
-    path    => '/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/sbin:/bin:/usr/games',
-    require => Exec['networking_restart']
-  }
-
-  package { "vim":
-    ensure => present,
-    require => Exec["aptitude_update"],
-  }
-
-  package { "tree":
-    ensure => present,
-    require => Exec["aptitude_update"],
-  }
-
-  package { "htop":
-    ensure => present,
-    require => Exec["aptitude_update"],
-  }
-
-  package { "nfs-kernel-server":
-    ensure => present,
-    require => Exec["aptitude_update"],
-  }
-}
-
 include base
 include drush
-# include phpcgi
-# include phpenv
-# include mysql
-# include nginx
-# include commerce_kickstart
+include phpcgi
+include phpenv
+include mysql
+include nginx
+include commerce_kickstart
