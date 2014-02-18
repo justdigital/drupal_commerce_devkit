@@ -9,7 +9,9 @@
 
 Vagrant.configure("2") do |config|
 
-  config.vm.box = "braspag"
+  config.vm.box = "drupal_commerce_devkit"
+
+  config.vm.box_url = "http://puppet-vagrant-boxes.puppetlabs.com/ubuntu-server-12042-x64-vbox4210.box"
 
   config.vbguest.auto_update = false
 
@@ -33,6 +35,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision :puppet do |puppet|
      puppet.manifests_path = "manifests"
+     puppet.module_path = "manifests/modules"
      puppet.manifest_file  = "base.pp"
   end
 

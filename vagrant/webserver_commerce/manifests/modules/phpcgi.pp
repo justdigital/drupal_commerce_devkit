@@ -1,7 +1,8 @@
 class phpcgi {
-	
+  
   package { "php5-cgi":
     ensure => present,
+    require => Exec["aptitude_update"],
   }
 
   service { "php-fastcgi":

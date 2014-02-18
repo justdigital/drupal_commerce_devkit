@@ -1,33 +1,45 @@
 class commerce_kickstart {
   
-  exec{'install-db-site-create-database-braspag':
-    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
-    cwd     => '/vagrant/configurations/data/',
-    command => 'mysql -u root -e "CREATE DATABASE braspag;"',
-    onlyif  => ["/usr/bin/test ! $(! /usr/bin/mysql -u root --database braspag -e 'SHOW TABLES')"],
+  exec {'dl-commerce':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/drush',
+    cwd     => '/var/www/',
+    command => "drush dl commerce_kickstart --drupal-project-rename=commerce_kickstart",
+    onlyif  => "/usr/bin/test ! -d /var/www/commerce_kickstart",
+    require => [ Exec['git-drush'], Service['php-fastcgi']]
   }
 
-  exec{'install-db-site-mysql-braspag':
+  exec{'set-permissions':
     path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
-    cwd     => '/vagrant/configurations/data/',
-    command => 'mysql -u root --database braspag < db-braspag.sql',
-    require => Exec['install-db-site-create-database-braspag'],
-    onlyif  => "/usr/bin/test ! $(! /usr/bin/mysql -u root --database braspag -e 'SELECT * FROM sessions;')",
+    cwd     => '/var/www/',
+    command => 'chmod -R 777 commerce_kickstart/sites/default/files',
+    onlyif  => "/usr/bin/test -d /var/www/commerce_kickstart/sites/default/files",
+    require => [Exec['dl-commerce'],Exec['install-commerce-kickstart']]
   }
 
-  exec{ 'set-permissions-braspag':
-    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
-    cwd     => '/var/www/braspag/',
-    command => 'chmod -R 777 commerce_kickstart',
-    onlyif  => "/usr/bin/test -f /var/www/braspag",
+  exec{'install-commerce-kickstart':
+    path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/drush',
+    cwd     => '/var/www/commerce_kickstart/',
+    command => 'drush si commerce_kickstart --account-name=admin --account-pass=admin --db-url=mysql://root:@localhost/commerce_kickstart -y',
+    onlyif  => 'test ! -f sites/default/settings.php',
+    timeout => 0,
+    require => [Exec['dl-commerce'],Exec['install-db-site-create-database']]
   }
 
-  exec{'cp-settings-braspag':
+  exec{'install-db-site-create-database':
     path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games',
-    cwd     => '/var/www/braspag/sites/',
-    require => Exec['mount-files-loja'],
-    command => 'cp -Rf /vagrant/webserver_braspag/configurations/site/braspag/default/settings.php default/',
+    command => 'mysql -u root -e "CREATE DATABASE commerce_kickstart;"',
+    unless  => ["mysql -u root --database commerce_kickstart -e 'SHOW TABLES'"],
+    require => [Service['mysql']]
   }
+
+  exec{ "ngix_restart":
+    command => '/etc/init.d/nginx restart',
+    require => Exec['install-commerce-kickstart']
+  }
+
+  info("this is info. visible only with -v or --verbose or -d or --debug")
+  # notice{"Site instalado com sucesso! Usuário: admin / Senha: admin":
+  #   require => [Exec['install-commerce-kickstart']]
+  # }
 
 }
-

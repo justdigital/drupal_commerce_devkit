@@ -2,6 +2,7 @@ class nginx {
 
   package { "nginx":
     ensure => present,
+    require => Exec["aptitude_update"],
   }
 
   service { "nginx":
