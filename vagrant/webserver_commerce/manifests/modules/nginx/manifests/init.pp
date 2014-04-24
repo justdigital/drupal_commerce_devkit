@@ -14,7 +14,7 @@ class nginx {
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/manifests/modules/nginx/conf.d/proxy.conf",
+    source => "/vagrant/manifests/modules/nginx/configurations/conf.d/proxy.conf",
     require => Package["nginx"],
   }
 
@@ -22,7 +22,7 @@ class nginx {
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/manifests/modules/nginx/sites-available/default",
+    source => "/vagrant/manifests/modules/nginx/configurations/sites-available/default",
     require => Package["nginx"],
   }
 
@@ -30,7 +30,7 @@ class nginx {
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/manifests/modules/nginx/sites-available/default",
+    source => "/vagrant/manifests/modules/nginx/configurations/sites-available/default",
     require => Package["nginx"],
   }
 
