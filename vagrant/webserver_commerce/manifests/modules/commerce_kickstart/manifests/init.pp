@@ -5,7 +5,8 @@ class commerce_kickstart {
     cwd     => '/var/www/',
     command => "drush dl commerce_kickstart --drupal-project-rename=commerce_kickstart",
     onlyif  => "/usr/bin/test ! -d /var/www/commerce_kickstart",
-    require => [ Exec['git-drush'], Service['php-fastcgi']]
+    require => [ Exec['git-drush'], Service['php-fastcgi']],
+    timeout => 0,
   }
 
   exec{'set-permissions':
@@ -13,7 +14,8 @@ class commerce_kickstart {
     cwd     => '/var/www/',
     command => 'chmod -R 777 commerce_kickstart/sites/default/files',
     onlyif  => "/usr/bin/test -d /var/www/commerce_kickstart/sites/default/files",
-    require => [Exec['dl-commerce'],Exec['install-commerce-kickstart']]
+    require => [Exec['dl-commerce'],Exec['install-commerce-kickstart']],
+    timeout => 0,
   }
 
   exec{'install-commerce-kickstart':
@@ -22,7 +24,7 @@ class commerce_kickstart {
     command => 'drush si commerce_kickstart --account-name=admin --account-pass=admin --db-url=mysql://root:@localhost/commerce_kickstart -y',
     onlyif  => 'test ! -f sites/default/settings.php',
     timeout => 0,
-    require => [Exec['dl-commerce'],Exec['install-db-site-create-database']]
+    require => [Exec['dl-commerce'],Exec['install-db-site-create-database']],
   }
 
   exec{'install-db-site-create-database':
