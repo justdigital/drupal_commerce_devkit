@@ -2,7 +2,6 @@ class phpcgi {
   
   package { "php5-cgi":
     ensure => present,
-    require => Exec["aptitude_update"],
   }
 
   service { "php-fastcgi":
@@ -14,7 +13,7 @@ class phpcgi {
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/configurations/etc/init.d/php-fastcgi",
+    source => "/vagrant/manifests/modules/phpcgi/configurations/php-fastcgi",
     require => Package["php5-cgi"],
   }
 
@@ -22,7 +21,7 @@ class phpcgi {
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/configurations/etc/php5/cgi/php.ini",
+    source => "/vagrant/manifests/modules/phpcgi/configurations/php.ini",
     require => Package["php5-cgi"],
   }
 
@@ -30,7 +29,7 @@ class phpcgi {
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/configurations/etc/php5/cgi/conf.d/apc.ini",
+    source => "/vagrant/manifests/modules/phpcgi/configurations/apc.ini",
     require => Package["php5-cgi"],
   }
   

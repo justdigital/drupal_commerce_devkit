@@ -2,7 +2,6 @@ class drush {
 
   package { "git-core":
     ensure => present,
-    require => Exec["aptitude_update"],
   }
 
   exec {'git-drush':
@@ -20,18 +19,18 @@ class drush {
     require => [Package['git-core']],
   }
 
-  file { "/home/vagrant/.bashrc":
-    mode => 644,
-    owner => vagrant,
-    group => vagrant,
-    source => "/vagrant/manifests/modules/drush/configurations/.bashrc",
-  }
+  # file { "/home/vagrant/.bashrc":
+  #   mode => 644,
+  #   owner => vagrant,
+  #   group => vagrant,
+  #   source => "/vagrant/configurations/home/vagrant/.bashrc",
+  # }
 
-  file { "/root/.bashrc":
-    mode => 644,
-    owner => root,
-    group => root,
-    source => "/vagrant/manifests/modules/drush/configurations/.bashrc",
-  }
+  # file { "/root/.bashrc":
+  #   mode => 644,
+  #   owner => root,
+  #   group => root,
+  #   source => "/vagrant/configurations/home/vagrant/.bashrc",
+  # }
   
 }

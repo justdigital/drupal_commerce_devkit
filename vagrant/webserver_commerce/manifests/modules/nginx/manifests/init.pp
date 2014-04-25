@@ -2,19 +2,22 @@ class nginx {
 
   package { "nginx":
     ensure => present,
-    require => Exec["aptitude_update"],
   }
 
   service { "nginx":
     ensure => running,
-    require => [ File["/etc/nginx/sites-enabled/default"], File["/etc/nginx/sites-available/default"], Service["php-fastcgi"] ],
+    require => [ File["/etc/nginx/sites-enabled/default"], File["/etc/nginx/sites-available/default"], Service["php-fastcgi"], Service["apache2"]],
+  }
+
+  service { "apache2":
+    ensure => stopped,
   }
 
   file { "/etc/nginx/conf.d/proxy.conf":
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/manifests/modules/nginx/configurations/conf.d/proxy.conf",
+    source => "/vagrant/manifests/modules/nginx/configurations/proxy.conf",
     require => Package["nginx"],
   }
 
@@ -22,7 +25,7 @@ class nginx {
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/manifests/modules/nginx/configurations/sites-available/default",
+    source => "/vagrant/manifests/modules/nginx/configurations/default",
     require => Package["nginx"],
   }
 
@@ -30,7 +33,7 @@ class nginx {
     mode => 755,
     owner => root,
     group => root,
-    source => "/vagrant/manifests/modules/nginx/configurations/sites-available/default",
+    source => "/vagrant/manifests/modules/nginx/configurations/default",
     require => Package["nginx"],
   }
 

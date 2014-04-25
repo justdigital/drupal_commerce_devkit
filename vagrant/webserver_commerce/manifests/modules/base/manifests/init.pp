@@ -4,15 +4,14 @@ class base {
     ensure => "present",
   }
 
-  # exec{ "networking_restart":
-  #   command => '/etc/init.d/networking restart',
-  #   timeout => 0
-  # }
+  exec{ "networking_restart":
+    command => '/etc/init.d/networking restart'
+  }
 
   exec { "aptitude_update":
     command => "aptitude update",
     path    => '/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/sbin:/bin:/usr/games',
-    # require => Exec['networking_restart']
+    require => Exec['networking_restart']
   }
 
   package { "vim":
